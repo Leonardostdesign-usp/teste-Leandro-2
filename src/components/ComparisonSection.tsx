@@ -37,11 +37,18 @@ export const ComparisonSection: React.FC<ComparisonSectionProps> = ({ units }) =
   const allCo2s = activeCohortUnits.map((u) => u.co2[0]!).sort((a, b) => a - b);
   const allEns = activeCohortUnits.map((u) => u.en[0]!).sort((a, b) => a - b);
 
-  const C_baselineCo2 = allCo2s.length ? allCo2s[Math.floor(allCo2s.length * 0.5)] : 120;
-  const P25_classACo2 = allCo2s.length ? allCo2s[Math.floor(allCo2s.length * 0.25)] : 95;
-  const Q3_classCCo2 = allCo2s.length ? allCo2s[Math.floor(allCo2s.length * 0.75)] : 140;
-  const R_riskMaxCo2 = allCo2s.length ? allCo2s[Math.floor(allCo2s.length * 0.9)] : 165;
+  const percCo2 = (q: number) => (allCo2s.length ? allCo2s[Math.floor(allCo2s.length * q)] : 120);
+  const C_baselineCo2 = percCo2(0.5);
+  const P25_classACo2 = percCo2(0.25);
+  const Q3_classCCo2 = percCo2(0.75);
+  const R_riskMaxCo2 = percCo2(0.9);
   const V_valueRefCo2 = Math.round((C_baselineCo2 + R_riskMaxCo2) / 2);
+
+  const P_stateOfArtCo2 = allCo2s.length ? allCo2s[0]! : 0;
+  const C_melhorCenarioCo2 = P25_classACo2;
+  const R_piorCenarioCo2 = R_riskMaxCo2;
+  const V_valorReferenciaCo2 = Math.round((C_melhorCenarioCo2 + R_piorCenarioCo2) / 2);
+  const E_emissaoAtualCo2 = C_baselineCo2;
 
   const C_baselineEn = allEns.length ? allEns[Math.floor(allEns.length * 0.5)] : 750;
 
@@ -71,35 +78,48 @@ export const ComparisonSection: React.FC<ComparisonSectionProps> = ({ units }) =
   const scenarioPoints = [
     {
       id: "P",
-      nome: "P — Potencial de Mitigação (25% Melhores)",
-      co2: P25_classACo2,
-      frac: fracBetter(P25_classACo2),
+      nome: "P — Potencial de Mitigação (Estado da Arte / menor emissão)",
+      co2: P_stateOfArtCo2,
+      frac: fracBetter(P_stateOfArtCo2),
       cor: "#10b981",
-      descricao: "Limite dos 25% melhores projetos. Onde o projeto poderia chegar com os melhores fornecedores.",
+      z: 80,
+      descricao: "Menor emissão registrada na base (estado da arte). Limite máximo de mitigação possível (gap até este ponto).",
     },
     {
       id: "C",
-      nome: "C — Melhor Cenário / Linha de Base (50% Melhores)",
-      co2: C_baselineCo2,
-      frac: fracBetter(C_baselineCo2),
+      nome: "C — Melhor Cenário (melhores fornecedores)",
+      co2: C_melhorCenarioCo2,
+      frac: fracBetter(C_melhorCenarioCo2),
       cor: "#3b82f6",
-      descricao: "Mediana dos 50% melhores projetos. Referência contra a qual o projeto é classificado.",
+      z: 80,
+      descricao: "Valor mais baixo entre os cenários: emissão usando exclusivamente os melhores fornecedores do setor.",
+    },
+    {
+      id: "E",
+      nome: "E — Emissão Atual (composição atual)",
+      co2: E_emissaoAtualCo2,
+      frac: fracBetter(E_emissaoAtualCo2),
+      cor: "#94a3b8",
+      z: 140,
+      descricao: "Emissão real estimada do projeto com a composição atual de materiais e fornecedores.",
     },
     {
       id: "V",
       nome: "V — Valor de Referência V = (C + R)/2",
-      co2: V_valueRefCo2,
-      frac: fracBetter(V_valueRefCo2),
+      co2: V_valorReferenciaCo2,
+      frac: fracBetter(V_valorReferenciaCo2),
       cor: "#f59e0b",
-      descricao: "Valor provável de emissão, média entre C e R.",
+      z: 80,
+      descricao: "Valor provável/esperado de emissão com fornecedores médios. Mediana entre C e R.",
     },
     {
       id: "R",
-      nome: "R — Pior Cenário / Teto de Risco",
-      co2: R_riskMaxCo2,
-      frac: fracBetter(R_riskMaxCo2),
+      nome: "R — Pior Cenário (piores fornecedores)",
+      co2: R_piorCenarioCo2,
+      frac: fracBetter(R_piorCenarioCo2),
       cor: "#f43f5e",
-      descricao: "Teto de risco com o pior fornecedor registrado.",
+      z: 80,
+      descricao: "Valor mais alto entre os cenários: emissão usando exclusivamente os piores fornecedores do setor.",
     },
   ];
 
@@ -257,29 +277,30 @@ export const ComparisonSection: React.FC<ComparisonSectionProps> = ({ units }) =
                 <Scale size={12} style={{ marginRight: "4px" }} /> Âncoras posicionadas sobre a Curva
               </span>
               <h4 className="card-title" style={{ marginTop: "0.4rem" }}>
-                Cenários P, C, V e R sobre a Curva de Benchmark
+                Cenários P, C, V, R e Emissão Atual sobre a Curva de Benchmark
               </h4>
             </div>
           </div>
           <p className="card-subtitle">
-            Cada cenário é um ponto na curva: mostra **que fração de projetos é melhor** que aquela intensidade. Linha de Base C = {C_baselineCo2} kg/m² | V = {V_valueRefCo2} | R = {R_riskMaxCo2} | P = {P25_classACo2}.
+            Curva S = distribuição acumulada de todos os projetos (eixo Y: fração acumulada 0–1). Cenários do projeto posicionados sobre a curva com a hierarquia **P ≤ C ≤ Emissão Atual ≤ V ≤ R**. Linha de Base **horizontal** = mediana (50% melhores).
           </p>
 
-          <div style={{ width: "100%", height: "270px" }}>
+          <div style={{ width: "100%", height: "280px" }}>
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={benchmarkCurve} margin={{ top: 12, right: 12, left: -8, bottom: 0 }}>
                 <XAxis type="number" dataKey="co2" name="CO₂" unit=" kg/m²" domain={[curveXMin, curveXMax]} stroke="var(--text-dim)" fontSize={10} />
-                <YAxis type="number" dataKey="frac" name="Fração de projetos melhores" domain={[0, 1]} tickFormatter={(v: number) => (v * 100).toFixed(0) + "%"} stroke="var(--text-dim)" fontSize={10} />
+                <YAxis type="number" dataKey="frac" name="Fração acumulada" domain={[0, 1]} tickFormatter={(v: number) => (v * 100).toFixed(0) + "%"} stroke="var(--text-dim)" fontSize={10} />
+                <ZAxis dataKey="z" range={[60, 160]} />
 
-                {scenarioPoints.map((s) => (
+                {scenarioPoints.filter((s) => s.id !== "E").map((s) => (
                   <ReferenceLine key={`ref-${s.id}`} x={s.co2} stroke={s.cor} strokeDasharray="5 3" label={{ value: `${s.id} ${s.co2}`, position: "top", fill: s.cor, fontSize: 10, fontWeight: 700 }} />
                 ))}
 
                 <ReferenceArea x1={curveXMin} x2={P25_classACo2} fill="#10b981" fillOpacity={0.08} ifOverflow="extendDomain" />
                 <ReferenceArea x1={Q3_classCCo2} x2={curveXMax} fill="#f43f5e" fillOpacity={0.08} ifOverflow="extendDomain" />
 
-                <ReferenceArea x1={curveXMin} x2={curveXMax} y1={0.45} y2={0.55} fill="#94a3b8" fillOpacity={0.08} ifOverflow="extendDomain" />
-                <ReferenceLine y={0.5} stroke="#94a3b8" strokeWidth={2} strokeDasharray="6 3" label={{ value: "LINHA DE BASE (50% MELHORES = MEDIANA)", position: "insideTopRight", fill: "#cbd5e1", fontSize: 10, fontWeight: 700 }} />
+                <ReferenceArea x1={curveXMin} x2={curveXMax} y1={0.42} y2={0.58} fill="#94a3b8" fillOpacity={0.08} ifOverflow="extendDomain" />
+                <ReferenceLine y={0.5} stroke="#94a3b8" strokeWidth={2} strokeDasharray="6 3" label={{ value: "LINHA DE BASE (MEDIANA — 50% MELHORES)", position: "insideTopRight", fill: "#cbd5e1", fontSize: 10, fontWeight: 700 }} />
 
                 <Tooltip
                   content={({ payload }) => {
@@ -290,7 +311,7 @@ export const ComparisonSection: React.FC<ComparisonSectionProps> = ({ units }) =
                           <div style={{ backgroundColor: "var(--bg-panel)", border: "1px solid var(--border-color)", padding: "0.6rem 0.75rem", borderRadius: "8px", maxWidth: "260px" }}>
                             <div style={{ fontWeight: "bold", color: d.cor, fontSize: "0.85rem" }}>{d.nome}</div>
                             <div style={{ fontSize: "0.8rem", color: "#fff", marginTop: "0.2rem" }}>
-                              <strong>{d.co2} kg/m²</strong> — fração de projetos melhores: <strong>{(d.frac * 100).toFixed(0)}%</strong>
+                              <strong>{d.co2} kg/m²</strong> — fração acumulada: <strong>{(d.frac * 100).toFixed(0)}%</strong>
                             </div>
                             <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>{d.descricao}</div>
                           </div>
@@ -298,7 +319,7 @@ export const ComparisonSection: React.FC<ComparisonSectionProps> = ({ units }) =
                       }
                       return (
                         <div style={{ backgroundColor: "var(--bg-panel)", border: "1px solid var(--border-color)", padding: "0.5rem 0.75rem", borderRadius: "8px" }}>
-                          <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{d.co2} kg/m² — {((d.frac || 0) * 100).toFixed(0)}% melhores</span>
+                          <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{d.co2} kg/m² — fração acumulada: {((d.frac || 0) * 100).toFixed(0)}%</span>
                         </div>
                       );
                     }

@@ -7,6 +7,8 @@ import { ComparisonSection } from "./components/ComparisonSection";
 import { EvolutionSection } from "./components/EvolutionSection";
 import { ValidationSection } from "./components/ValidationSection";
 import { RankingsSection } from "./components/RankingsSection";
+import { GrafReq1Section } from "./components/GrafReq1Section";
+import { GrafReq2Section } from "./components/GrafReq2Section";
 import { ProjectListDrawer } from "./components/ProjectListDrawer";
 
 const ds = data as unknown as Dataset;
@@ -68,6 +70,12 @@ export default function App() {
         )}
         {activeTab === "validation" && (
           <ValidationSection units={filteredUnits} limiarDivergencia={filters.limiarDivergencia} />
+        )}
+        {activeTab === "grafreq1" && (
+          <GrafReq1Section units={filteredUnits} />
+        )}
+        {activeTab === "grafreq2" && (
+          <GrafReq2Section units={filteredUnits} />
         )}
       </main>
 

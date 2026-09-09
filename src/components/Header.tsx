@@ -1,6 +1,6 @@
 import React from "react";
 import type { Dataset, FilterState } from "../types";
-import { Filter, RefreshCw, ListFilter, ShieldAlert, Building2, Layers, MapPin, SlidersHorizontal, Eye, Trophy } from "lucide-react";
+import { Filter, RefreshCw, ListFilter, ShieldAlert, Building2, Layers, MapPin, SlidersHorizontal, Eye, Trophy, BarChart3 } from "lucide-react";
 
 interface HeaderProps {
   ds: Dataset;
@@ -238,6 +238,22 @@ export const Header: React.FC<HeaderProps> = ({
           style={{ padding: "0.6rem 1.2rem", fontSize: "0.9rem" }}
         >
           <ShieldAlert size={16} /> Auditoria &amp; Linha Cássio
+        </button>
+
+        <button
+          className={`btn ${activeTab === "grafreq1" ? "btn-primary" : "btn-secondary"}`}
+          onClick={() => setActiveTab("grafreq1")}
+          style={{ padding: "0.6rem 1.2rem", fontSize: "0.9rem" }}
+        >
+          <BarChart3 size={16} /> Graf req 1
+        </button>
+
+        <button
+          className={`btn ${activeTab === "grafreq2" ? "btn-primary" : "btn-secondary"}`}
+          onClick={() => setActiveTab("grafreq2")}
+          style={{ padding: "0.6rem 1.2rem", fontSize: "0.9rem" }}
+        >
+          <MapPin size={16} /> Graf req 2
         </button>
       </nav>
     </header>
